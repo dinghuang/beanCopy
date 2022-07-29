@@ -3,12 +3,14 @@ package org.dinghuuang.bean.compare;
 import org.dinghuuang.bean.compare.dto.SameTypeADTOConversionSameTypeBDTO;
 import org.dinghuuang.bean.sameType.dto.SameTypeADTO;
 import org.dinghuuang.bean.sameType.dto.SameTypeBDTO;
+import org.dinghuuang.bean.util.BeanCopierUtils;
 import org.dinghuuang.bean.util.BeanUtils;
 import org.dinghuuang.bean.util.OldUtils;
 import com.github.houbb.data.factory.core.util.DataUtil;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -21,12 +23,15 @@ import org.junit.Test;
 public class CompareTest {
 
     @Test
-    public void singleThreadOldTest() {
+    public void singleThreadOldTest() throws Exception {
         //目前的性能对比
         SameTypeADTO sameTypeADTO = DataUtil.build(SameTypeADTO.class);
         //先提前放到缓存中
+        long a1 = System.currentTimeMillis();
         SameTypeBDTO temp = new SameTypeBDTO();
         BeanUtils.copy(sameTypeADTO, temp);
+        long a2 = System.currentTimeMillis();
+        System.out.println("init spend " + (a2 - a1) + "ms");
         int[] ints = new int[]{100, 1000, 10000, 100000, 1000000, 10000000};
         for (int anInt : ints) {
             long time0 = System.currentTimeMillis();
@@ -44,6 +49,14 @@ public class CompareTest {
             }
             long time31 = System.currentTimeMillis();
             System.out.println(anInt + " BeanUtils spend " + (time31 - time01) + "ms");
+
+            long time40 = System.currentTimeMillis();
+            for (int i = 0; i < anInt; i++) {
+                SameTypeBDTO sameTypeBDTO = new SameTypeBDTO();
+                BeanCopierUtils.copyProperties(sameTypeADTO, sameTypeBDTO);
+            }
+            long time41 = System.currentTimeMillis();
+            System.out.println(anInt + " BeanCopierUtils spend " + (time41 - time40) + "ms");
 
             long time02 = System.currentTimeMillis();
             for (int i = 0; i < anInt; i++) {
